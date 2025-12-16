@@ -1,40 +1,38 @@
 import streamlit as st
 from langchain_openai import ChatOpenAI
-from langchain.prompts import PromptTemplate
-from langchain.chains import LLMChain
+from langchain.prompts import ChatPromptTemplate
 
-def activity_agent(weather_summary, time_available, preference):
+def activity_agent(weather, time_available, preference):
     llm = ChatOpenAI(
         temperature=0.6,
-        openai_api_key=st.secrets["OPENAI_API_KEY"]
+        api_key=st.secrets["OPENAI_API_KEY"]
     )
 
-    prompt = PromptTemplate(
-        input_variables=["weather", "time", "preference"],
-        template="""
-You are an intelligent activity recommendation assistant.
-
-Weather summary:
+    prompt = ChatPromptTemplate.from_messages([
+        ("system", "You are an intelligent activity recommendation assistant."),
+        ("human",
+         """
+Weather details:
 {weather}
 
 Available time: {time}
 Preference: {preference}
 
-Provide:
-1. 3–5 suitable activities
-2. Things to carry
-3. Best time slots (if outdoor)
+Suggest:
+- 3 to 5 suitable activities
+- Things to carry
+- Best time (if outdoor)
 
-Use clear bullet points.
-"""
-    )
+Use bullet points only.
+""")
+    ])
 
-    chain = LLMChain(llm=llm, prompt=prompt)
+    chain = prompt | llm
 
-    response = chain.run(
-        weather=weather_summary,
-        time=time_available,
-        preference=preference
-    )
+    response = chain.invoke({
+        "weather": weather,
+        "time": time_available,
+        "preference": preference
+    })
 
-    return response
+    return response.content
