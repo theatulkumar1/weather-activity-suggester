@@ -1,22 +1,57 @@
 import streamlit as st
-from agent import agent
+import requests
+from agent import activity_agent
 
-st.set_page_config(page_title="Weather Activity Suggester", page_icon="🌦️")
+st.set_page_config(page_title="Weather Activity Suggester")
 
-st.title("🌦️ Weather-Based Activity Suggester")
-st.write("AI-powered activity recommendations using LangChain Agent")
+st.title("🌦 Weather-Based Activity Suggester")
 
-city = st.text_input("Enter city name")
+city = st.text_input("Enter City Name")
+time_available = st.selectbox(
+    "Available Time",
+    ["1 hour", "Half day", "Full day"]
+)
+preference = st.radio(
+    "Preference",
+    ["Indoor", "Outdoor"]
+)
 
-if st.button("Get Suggestion"):
-    if city:
-        with st.spinner("Analyzing weather..."):
-            prompt = f"""
-            You are a smart activity recommendation system.
-            Get the weather for {city} and suggest 2–3 suitable activities.
-            """
-            result = agent.run(prompt)
-            st.success("Suggested Activities:")
-            st.write(result)
+def get_weather(city):
+    api_key = st.secrets["WEATHER_API_KEY"]
+    url = (
+        f"https://api.openweathermap.org/data/2.5/weather"
+        f"?q={city}&appid={api_key}&units=metric"
+    )
+
+    response = requests.get(url)
+    data = response.json()
+
+    if data.get("cod") != 200:
+        return None
+
+    return (
+        f"Temperature: {data['main']['temp']} °C\n"
+        f"Condition: {data['weather'][0]['description']}\n"
+        f"Humidity: {data['main']['humidity']}%\n"
+        f"Wind Speed: {data['wind']['speed']} m/s"
+    )
+
+if st.button("Suggest Activities"):
+    if not city:
+        st.error("Please enter a city name.")
     else:
-        st.warning("Please enter a city name.")
+        weather_summary = get_weather(city)
+
+        if weather_summary is None:
+            st.error("City not found or API error.")
+        else:
+            st.subheader("🌤 Weather Summary")
+            st.text(weather_summary)
+
+            st.subheader("✅ Recommended Activities")
+            result = activity_agent(
+                weather_summary,
+                time_available,
+                preference
+            )
+            st.write(result)
