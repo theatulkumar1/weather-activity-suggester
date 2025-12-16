@@ -10,18 +10,17 @@ def activity_agent(weather, time_available, preference):
 
     prompt = ChatPromptTemplate.from_messages([
         ("system", "You are an intelligent activity recommendation assistant."),
-        ("human",
-         """
-Weather details:
+        ("human", """
+Weather:
 {weather}
 
 Available time: {time}
 Preference: {preference}
 
 Suggest:
-- 3 to 5 suitable activities
+- 3 to 5 activities
 - Things to carry
-- Best time (if outdoor)
+- Best time if outdoor
 
 Use bullet points only.
 """)
