@@ -1,5 +1,6 @@
 from langchain_openai import ChatOpenAI
-from langchain.agents import Tool, initialize_agent, AgentType
+from langchain.tools import Tool
+from langchain.agents import initialize_agent, AgentType
 from tools import get_weather
 
 llm = ChatOpenAI(temperature=0.6)
